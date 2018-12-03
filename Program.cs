@@ -22,7 +22,8 @@ namespace TrettioEtt
             players.Add(new BasicPlayer());
             players.Add(new FabianPlayer());
             players.Add(new FabianPlayerTest());
-            players.Add(new FabianPlayerv1Test());
+            players.Add(new FabianFaresPlayer());
+            players.Add(new FaresPlayer());
             Console.WriteLine("Vilka två spelare skall mötas?");
             for (int i = 1; i <= players.Count; i++)
             {
@@ -760,7 +761,7 @@ namespace TrettioEtt
 
     class FabianPlayer : Player //Denna spelare fungerar exakt som MyPlayer. Ändra gärna i denna för att göra tester.
     {
-        private List<Card> OpponentCards = new List<Card>()
+        private Card[] KnownOpponentCards = new Card[3];
         public FabianPlayer()
         {
             Name = "FabianPlayer";
@@ -769,11 +770,15 @@ namespace TrettioEtt
         public override bool Knacka(int round)
         {
             
-            if (Game.Score(this) >= 25)
+            if (Game.Score(this) >= 24)
             {
                 return true;
             }
             else if ((Game.Score(this) >= 20 && round == 3) || (Game.Score(this) >= 20 && round == 2))
+            {
+                return true;
+            }
+            else if ((Game.Score(this) >= 22 && round <= 8))
             {
                 return true;
             }
@@ -878,10 +883,14 @@ namespace TrettioEtt
             }
 
         }
+        private void RegisterOpponentCards()
+        {
+            KnownOpponentCards.Add(card)
+        }
     }
     class FabianPlayerTest : Player //Denna spelare fungerar exakt som MyPlayer. Ändra gärna i denna för att göra tester.
     {
-
+        private List<Card> OpponentCards = new List<Card>();
         public FabianPlayerTest()
         {
             Name = "FabianPlayerTest";
@@ -889,7 +898,133 @@ namespace TrettioEtt
 
         public override bool Knacka(int round)
         {
-            if (Game.Score(this) >= 22)
+
+            if (Game.Score(this) >= 23)
+            {
+                return true;
+            }
+            else if ((Game.Score(this) >= 20 && round == 3) || (Game.Score(this) >= 20 && round == 2))
+            {
+                return true;
+            }
+            else if ((Game.Score(this) >= 22 && round <= 8))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public override bool TaUppKort(Card card)
+        {
+            int lowestCardInHandValue = 12;
+            for (int i = 0; i < Hand.Count; i++)
+            {
+                if (Hand[i].Value < card.Value)
+                {
+                    lowestCardInHandValue = card.Value;
+                }
+            }
+            if (card.Value == 11 || (card.Value == 10 && card.Suit == BestSuit) || (card.Value >= lowestCardInHandValue && card.Suit == BestSuit))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+
+        }
+
+        public override Card KastaKort()
+        {
+            Game.Score(this);
+            Card worstCard = Hand.First();
+            int numberOfAce = 0;
+            for (int i = 0; i < Hand.Count; i++)
+            {
+                if (Hand[i].Value == 11)
+                {
+                    numberOfAce++;
+                }
+            }
+            bool[] aceAndDressed = new bool[3];
+            for (int i = 0; i < Hand.Count; i++)
+            {
+                if (Hand[i].Suit == BestSuit && Hand[i].Value == 11)
+                {
+                    aceAndDressed[0] = true;
+                }
+                else if (Hand[i].Suit == BestSuit && Hand[i].Value == 10)
+                {
+                    aceAndDressed[1] = true;
+                }
+                if (aceAndDressed[0] && aceAndDressed[1])
+                {
+                    aceAndDressed[2] = true;
+                }
+            }
+            int howManyOfBestSuit = 0;
+            for (int i = 0; i < Hand.Count; i++)
+            {
+                if (Hand[i].Suit == BestSuit)
+                {
+                    howManyOfBestSuit++;
+                }
+            }
+            for (int i = 1; i < Hand.Count; i++)
+            {
+                if (howManyOfBestSuit == 4 && worstCard.Value > Hand[i].Value)
+                {
+                    worstCard = Hand[i];
+                }
+                else if (howManyOfBestSuit == 3 && Hand[i].Suit != BestSuit)
+                {
+                    worstCard = Hand[i];
+                }
+                else if (aceAndDressed[2] && Hand[i].Suit != BestSuit)
+                {
+                    worstCard = Hand[i];
+                }
+                else if (numberOfAce == 2)
+                {
+                    if (Hand[i].Value != 11 && Hand[i].Value < worstCard.Value)
+                    {
+                        worstCard = Hand[i];
+                    }
+                }
+                else if (Hand[i].Value < worstCard.Value && Hand[i].Suit != BestSuit && Hand[i].Value != 11)
+                {
+                    worstCard = Hand[i];
+                }
+            }
+            return worstCard;
+
+        }
+
+        public override void SpelSlut(bool wonTheGame)
+        {
+            if (wonTheGame)
+            {
+                Wongames++;
+            }
+
+        }
+    }
+    class FabianFaresPlayer : Player //Denna spelare fungerar exakt som MyPlayer. Ändra gärna i denna för att göra tester.
+    {
+        private List<Card> OpponentCards = new List<Card>();
+        public FabianFaresPlayer()
+        {
+            Name = "FabianFaresPlayer";
+        }
+
+        public override bool Knacka(int round)
+        {
+
+            if (Game.Score(this) >= 25)
             {
                 return true;
             }
@@ -999,21 +1134,26 @@ namespace TrettioEtt
 
         }
     }
-    class FabianPlayerv1Test : Player //Denna spelare fungerar exakt som MyPlayer. Ändra gärna i denna för att göra tester.
+    class FaresPlayer : Player //Denna spelare fungerar exakt som MyPlayer. Ändra gärna i denna för att göra tester.
     {
-
-        public FabianPlayerv1Test()
+        public FaresPlayer()
         {
-            Name = "FabianPlayerv1Test";
+            Name = "FaresPlayer";
         }
 
         public override bool Knacka(int round)
         {
-            if (Game.Score(this) >= 28)
+            int fourrounds = 3;
+            int eightrounds = 8;
+            if (Game.Score(this) >= 20 && fourrounds >= round)
             {
                 return true;
             }
-            else if ((Game.Score(this) >= 25 && round == 3 )|| (Game.Score(this) >= 25 && round == 2))
+            else if (Game.Score(this) >= 24 && eightrounds >= round)
+            {
+                return true;
+            }
+            else if (Game.Score(this) >= 29)
             {
                 return true;
             }
@@ -1025,15 +1165,7 @@ namespace TrettioEtt
 
         public override bool TaUppKort(Card card)
         {
-            int lowestCardInHandValue = 12;
-            for (int i = 0; i < Hand.Count; i++)
-            {
-                if (Hand[i].Value < card.Value )
-                {
-                    lowestCardInHandValue = card.Value;
-                }
-            }
-            if (card.Value == 11 || (card.Value == 10 && card.Suit == BestSuit) || (card.Value >= lowestCardInHandValue && card.Suit == BestSuit))
+            if (card.Value == 11 || (card.Value == 10 && card.Suit == BestSuit))
             {
                 return true;
             }
@@ -1048,60 +1180,9 @@ namespace TrettioEtt
         {
             Game.Score(this);
             Card worstCard = Hand.First();
-            int numberOfAce = 0;
-            for (int i = 0; i < Hand.Count ; i++)
-            {
-                if (Hand[i].Value == 11)
-                {
-                    numberOfAce++;
-                }
-            }
-            bool[] aceAndDressed = new bool[3];
-            for (int i = 0; i < Hand.Count; i++)
-            {
-                if(Hand[i].Suit == BestSuit && Hand[i].Value == 11)
-                {
-                    aceAndDressed[0] = true;
-                }
-                else if (Hand[i].Suit == BestSuit && Hand[i].Value == 10)
-                {
-                    aceAndDressed[1] = true;
-                }
-                if (aceAndDressed[0] && aceAndDressed[1])
-                {
-                    aceAndDressed[2] = true;
-                }
-            }
-            int howManyOfBestSuit = 0;
-            for (int i = 0; i < Hand.Count; i++)
-            {
-                if (Hand[i].Suit == BestSuit)
-                {
-                    howManyOfBestSuit++;
-                }
-            }
             for (int i = 1; i < Hand.Count; i++)
             {
-                if (howManyOfBestSuit == 4 && worstCard.Value > Hand[i].Value)
-                {
-                    worstCard = Hand[i];
-                }
-                else if (howManyOfBestSuit == 3 && Hand[i].Suit != BestSuit)
-                {
-                    worstCard = Hand[i];
-                }
-                else if (aceAndDressed[2] && Hand[i].Suit != BestSuit)
-                {
-                    worstCard = Hand[i];
-                }
-                else if (numberOfAce == 2)
-                {
-                    if (Hand[i].Value != 11 && Hand[i].Value < worstCard.Value)
-                    {
-                        worstCard = Hand[i];
-                    }
-                }
-                else if (Hand[i].Value < worstCard.Value && Hand[i].Suit != BestSuit && Hand[i].Value != 11)
+                if (Hand[i].Value < worstCard.Value)
                 {
                     worstCard = Hand[i];
                 }
@@ -1119,7 +1200,6 @@ namespace TrettioEtt
 
         }
     }
-
 
 
 }
